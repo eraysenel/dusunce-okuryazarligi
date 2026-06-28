@@ -1,0 +1,204 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Düşünce Okuryazarlığı - Daha iyi düşünmek öğrenilebilir</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;500&family=Inter:wght@300;400;500;600&display=swap');
+  :root{
+    --bg:#faf8f3;--surface-1:#fffdf9;--surface-2:#f3efe6;--text-primary:#1f1d1a;--text-secondary:#55504a;--text-muted:#8a847b;
+    --text-accent:#b45309;--border:#e8e2d6;--border-strong:#d6cdbd;--border-accent:#e6b878;--bg-accent:#fbf2e2;
+    --bg-success:#e7f6ec;--text-success:#15803d;--bg-warning:#fdf0e3;--text-warning:#b45309;--radius:10px}
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{font-family:'Inter',system-ui,sans-serif;background:var(--bg);color:var(--text-primary);min-height:100dvh}
+  .root{max-width:680px;margin:0 auto}
+  .sr-only{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0,0,0,0)}
+  .hero{padding:3rem 2rem 2rem;border-bottom:.5px solid var(--border)}
+  .eyebrow{font-size:11px;letter-spacing:.15em;text-transform:uppercase;color:var(--text-muted);margin-bottom:1.2rem}
+  .title{font-family:'Playfair Display',serif;font-size:38px;font-weight:400;line-height:1.15;margin:0 0 1rem;max-width:480px}
+  .title em{font-style:italic;color:var(--text-accent)}
+  .subtitle{font-size:15px;color:var(--text-secondary);line-height:1.7;max-width:430px;margin:0 0 2rem}
+  .cta-row{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+  .btn-primary{background:var(--text-primary);color:var(--surface-1);border:none;border-radius:var(--radius);padding:11px 22px;font-size:14px;font-weight:500;cursor:pointer;font-family:inherit;transition:opacity .15s}
+  .btn-primary:hover{opacity:.85}
+  .btn-ghost{background:transparent;color:var(--text-secondary);border:.5px solid var(--border-strong);border-radius:var(--radius);padding:11px 22px;font-size:14px;cursor:pointer;font-family:inherit;transition:background .15s}
+  .btn-ghost:hover{background:var(--surface-2)}
+  .stat-row{display:flex;gap:2rem;margin-top:2rem;padding-top:1.5rem;border-top:.5px solid var(--border)}
+  .stat{display:flex;flex-direction:column;gap:2px}
+  .stat-num{font-family:'Playfair Display',serif;font-size:24px}.stat-label{font-size:12px;color:var(--text-muted)}
+  .section{padding:2rem;border-bottom:.5px solid var(--border)}
+  .section-label{font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:var(--text-muted);margin-bottom:1.2rem}
+  .trap-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:10px}
+  .trap-card{background:var(--surface-1);border:.5px solid var(--border);border-radius:12px;padding:1.1rem;cursor:pointer;transition:border-color .15s,background .15s}
+  .trap-card:hover{border-color:var(--border-strong);background:var(--surface-2)}
+  .trap-card.active{border-color:var(--border-accent);background:var(--bg-accent)}
+  .trap-icon{font-size:22px;margin-bottom:6px}
+  .trap-name{font-size:14px;font-weight:600;margin-bottom:4px}
+  .trap-desc{font-size:12px;color:var(--text-secondary);line-height:1.5}
+  .detail{background:var(--surface-1);border:.5px solid var(--border-accent);border-radius:12px;padding:1.4rem;margin-top:1rem;display:none}
+  .detail.on{display:block}
+  .detail-q{font-family:'Playfair Display',serif;font-size:18px;margin-bottom:.8rem;font-style:italic}
+  .detail-body{font-size:14px;color:var(--text-secondary);line-height:1.7;margin-bottom:1rem}
+  .detail-ex{background:var(--surface-2);border-left:2px solid var(--border-accent);padding:.8rem 1rem;font-size:13px;color:var(--text-secondary);line-height:1.6;margin-bottom:1rem}
+  .detail-ask{font-size:13px;color:var(--text-muted);font-style:italic;margin-bottom:1rem}
+  .lesson-row{display:flex;flex-direction:column;gap:8px}
+  .lesson{display:flex;align-items:flex-start;gap:12px;padding:1rem;background:var(--surface-1);border:.5px solid var(--border);border-radius:12px;cursor:pointer;transition:border-color .15s}
+  .lesson:hover{border-color:var(--border-strong)}
+  .lesson-num{font-family:'Playfair Display',serif;font-size:22px;color:var(--text-muted);min-width:28px}
+  .lesson-c{flex:1}.lesson-t{font-size:14px;font-weight:600;margin-bottom:3px}.lesson-s{font-size:12px;color:var(--text-muted)}
+  .tag{font-size:11px;padding:3px 8px;border-radius:20px;white-space:nowrap;align-self:flex-start}
+  .tag-yeni{background:var(--bg-success);color:var(--text-success)}.tag-kisa{background:var(--bg-accent);color:var(--text-accent)}.tag-zor{background:var(--bg-warning);color:var(--text-warning)}
+  .footer{padding:1.5rem 2rem;font-size:12px;color:var(--text-muted);line-height:1.5}
+  .footer a{color:var(--text-accent)}
+  /* TRAINER (chat) */
+  #trainer{display:none;flex-direction:column;height:100dvh;max-width:680px;margin:0 auto}
+  .t-head{padding:13px 18px;display:flex;align-items:center;justify-content:space-between;border-bottom:.5px solid var(--border);background:var(--surface-1)}
+  .t-head .ttl{font-family:'Playfair Display',serif;font-size:16px}
+  .t-back{font-size:13px;color:var(--text-secondary);background:none;border:.5px solid var(--border-strong);border-radius:8px;padding:6px 11px;cursor:pointer;font-family:inherit}
+  #chat{flex:1;overflow-y:auto;padding:18px;display:flex;flex-direction:column;gap:12px}
+  .b-row{display:flex;gap:8px;align-items:flex-end;animation:su .2s ease}
+  @keyframes su{from{opacity:0;transform:translateY(6px)}to{opacity:1}}
+  .b-row.user{flex-direction:row-reverse}
+  .av{width:28px;height:28px;border-radius:50%;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:13px}
+  .av.ai{background:var(--bg-accent)}.av.user{background:var(--surface-2)}
+  .bub{max-width:80%;padding:11px 14px;border-radius:14px;font-size:14px;line-height:1.65;white-space:pre-wrap;word-break:break-word}
+  .bub.ai{background:var(--surface-1);border:.5px solid var(--border);border-bottom-left-radius:4px}
+  .bub.user{background:#272320;color:#f3efe6;border-bottom-right-radius:4px}
+  .typing{display:flex;gap:4px;padding:12px 14px}.typing span{width:6px;height:6px;background:var(--text-muted);border-radius:50%;animation:bo 1.2s infinite}
+  .typing span:nth-child(2){animation-delay:.2s}.typing span:nth-child(3){animation-delay:.4s}
+  @keyframes bo{0%,60%,100%{transform:translateY(0)}30%{transform:translateY(-5px)}}
+  #ibar{padding:10px 14px 12px;border-top:.5px solid var(--border);background:var(--surface-1)}
+  .irow{display:flex;gap:8px;align-items:flex-end}
+  #inp{flex:1;background:var(--surface-1);border:.5px solid var(--border-strong);border-radius:10px;color:var(--text-primary);font-family:inherit;font-size:14px;padding:10px 12px;outline:none;resize:none;min-height:42px;max-height:120px}
+  #inp:focus{border-color:var(--border-accent)}
+  .send{width:42px;height:42px;flex-shrink:0;background:var(--text-primary);border:none;border-radius:10px;cursor:pointer;display:flex;align-items:center;justify-content:center}
+  .send:disabled{opacity:.4}.send svg{width:16px;height:16px;fill:var(--surface-1)}
+</style>
+</head>
+<body>
+<div class="root" id="landing">
+  <h2 class="sr-only">Düşünce Okuryazarlığı — ücretsiz, açık öğrenme platformu</h2>
+  <div class="hero">
+    <div class="eyebrow">Ücretsiz · Açık · Türkçe</div>
+    <h1 class="title">Daha iyi <em>düşünmek</em><br>öğrenilebilir.</h1>
+    <p class="subtitle">Mantık hataları, önyargılar, manipülasyon - bunları fark etmek bir yetenek değil, bir araç meselesi. Eksik araçları burada, yapay zekayla pratik yaparak edin.</p>
+    <div class="cta-row">
+      <button class="btn-primary" onclick="startTrainer('')">Antrenmana başla ↗</button>
+      <button class="btn-ghost" onclick="document.querySelector('#traps').scrollIntoView({behavior:'smooth'})">Tuzakları keşfet</button>
+    </div>
+    <div class="stat-row">
+      <div class="stat"><span class="stat-num">8+</span><span class="stat-label">Düşünce tuzağı</span></div>
+      <div class="stat"><span class="stat-num">∞</span><span class="stat-label">Adaptif soru</span></div>
+      <div class="stat"><span class="stat-num">0₺</span><span class="stat-label">Her zaman ücretsiz</span></div>
+    </div>
+  </div>
+
+  <div class="section" id="traps">
+    <div class="section-label">Sık düşülen tuzaklar</div>
+    <div class="trap-grid" id="trapGrid">
+      <div class="trap-card" onclick="selectTrap(this,'dogrulama')"><div class="trap-icon">👁️</div><div class="trap-name">Doğrulama önyargısı</div><div class="trap-desc">Zaten inandığımızı destekleyeni görürüz.</div></div>
+      <div class="trap-card" onclick="selectTrap(this,'otorite')"><div class="trap-icon">🎓</div><div class="trap-name">Otorite yanılgısı</div><div class="trap-desc">"Uzman söyledi" her zaman doğru değildir.</div></div>
+      <div class="trap-card" onclick="selectTrap(this,'saman')"><div class="trap-icon">🥊</div><div class="trap-name">Saman adam</div><div class="trap-desc">Karşı görüşü zayıflatarak çürütmek.</div></div>
+      <div class="trap-card" onclick="selectTrap(this,'yaniltici')"><div class="trap-icon">📊</div><div class="trap-name">Yanıltıcı veri</div><div class="trap-desc">Sayılar yalan söylemez, ama söylenti söyler.</div></div>
+    </div>
+    <div class="detail" id="detail">
+      <div class="detail-q" id="dQ"></div>
+      <div class="detail-body" id="dB"></div>
+      <div class="detail-ex" id="dE"></div>
+      <div class="detail-ask" id="dA"></div>
+      <button class="btn-primary" id="dStart">Bu tuzakla pratik yap ↗</button>
+    </div>
+  </div>
+
+  <div class="section">
+    <div class="section-label">Dersler (yapay zekayla pratik)</div>
+    <div class="lesson-row">
+      <div class="lesson" onclick="startTrainer('Bir argümanın zayıf noktasını bulmak: kanıt ile iddia arasındaki boşluğu görme')"><div class="lesson-num">1</div><div class="lesson-c"><div class="lesson-t">Bir argümanın zayıf noktasını bulmak</div><div class="lesson-s">Kanıt ile iddia arasındaki boşluğu görmek</div></div><div class="tag tag-yeni">Yeni</div></div>
+      <div class="lesson" onclick="startTrainer('Bir haberi okurken kaynak, çıkar ve bağlamı sorgulamak')"><div class="lesson-num">2</div><div class="lesson-c"><div class="lesson-t">Bir haberi okurken ne sorulur?</div><div class="lesson-s">Kaynak, çıkar, bağlam - üç soru</div></div><div class="tag tag-kisa">10 dk</div></div>
+      <div class="lesson" onclick="startTrainer('Kendi önyargılarını fark etmek için somut teknikler')"><div class="lesson-num">3</div><div class="lesson-c"><div class="lesson-t">Kendi önyargılarını görmek</div><div class="lesson-s">En zor ders - kendine bakmak</div></div><div class="tag tag-zor">Zorlu</div></div>
+    </div>
+  </div>
+
+  <div class="footer">Tamamen ücretsiz, reklamsız. Her dile çevrilebilir, her okula götürülebilir. · <a href="https://eraysenel.github.io/iyilik-icin-ai/" target="_blank" rel="noopener">İyilik İçin Yapay Zeka</a> · © Eray Şenel</div>
+</div>
+
+<div id="trainer">
+  <div class="t-head"><span class="ttl">🧠 Düşünce Antrenörü</span><button class="t-back" onclick="backHome()">← Geri</button></div>
+  <div id="chat"></div>
+  <div id="ibar"><div class="irow">
+    <textarea id="inp" placeholder="Cevabını yaz..." rows="1" onkeydown="hk(event)" oninput="ar(this)"></textarea>
+    <button class="send" id="send" onclick="sendMsg()"><svg viewBox="0 0 24 24"><path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"/></svg></button>
+  </div></div>
+</div>
+
+<script>
+  const PROXY="https://iyilikicinai.doksandokuz3032.workers.dev/";
+  const SITEKEY="0x4AAAAAADsB1yi04fQ4PyVU";
+  let _ses=null;try{_ses=JSON.parse(localStorage.getItem('cf_ses')||'null');}catch(e){}
+  let _tsWid=null,_tsTok='',_tsW=null;
+  function _tsShow(b){var e=document.getElementById('ts-box');if(e)e.style.display=b?'block':'none';}
+  window.cfTsOnload=function(){try{_tsWid=turnstile.render('#ts-box',{sitekey:SITEKEY,size:'compact',callback:function(t){_tsTok=t;if(_tsW){_tsW(t);_tsW=null;}if(_sesOk())_tsShow(false);},'error-callback':function(){if(_tsW){_tsW('');_tsW=null;}}});if(_sesOk())_tsShow(false);}catch(e){}};
+  function _tsToken(){return new Promise(function(res){if(typeof turnstile==='undefined'||_tsWid===null){res('');return;}if(_tsTok){var t=_tsTok;_tsTok='';res(t);return;}_tsShow(true);_tsW=res;try{turnstile.reset(_tsWid);}catch(e){}});}
+  function _sesOk(){return _ses&&_ses.token&&_ses.exp&&Date.now()<_ses.exp-60000;}
+  async function ensureSession(){
+    if(_sesOk())return _ses.token;
+    var tt=await _tsToken();
+    if(!tt)throw new Error('Bot doğrulaması yüklenemedi - sol alttaki kutuyu işaretle, tekrar dene.');
+    var r=await fetch(PROXY,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({action:'auth',turnstileToken:tt})});
+    var d=await r.json();
+    if(!d.sessionToken)throw new Error((d.error||'oturum alınamadı')+(d.codes&&d.codes.length?(' ['+d.codes.join(', ')+']'):''));
+    _ses={token:d.sessionToken,exp:d.exp};try{localStorage.setItem('cf_ses',JSON.stringify(_ses));}catch(e){}
+    _tsShow(false);return _ses.token;
+  }
+
+  var traps={
+    dogrulama:{q:"Neden sadece kendimizi haklı çıkaran bilgileri görürüz?",body:"Beyin enerji tasarrufu yapar. İnanılanı destekleyen bilgiyi işlemek, sorgulamaktan kolaydır. Bu yüzden aynı kaynağı okur, aynı insanlarla konuşuruz.",ex:"Örnek: Bir ürünü almadan önce aklımız çoktan karar vermiştir - sonra yalnızca o kararı destekleyen yorumları okuruz.",ask:"Kendine sor: Son ne zaman görüşünü değiştirdin ve neden?",label:"Doğrulama önyargısı"},
+    otorite:{q:"Bir uzman yanılabilir mi?",body:"Evet. Uzmanlık dar bir alandır. Bir doktor ekonomi, bir ekonomist psikoloji hakkında konuşurken otorite pozisyonundadır ama o alanda uzman değildir.",ex:"Örnek: 'X profesörü iklim değişiminin yavaşladığını söyledi' - peki bu profesörün uzmanlık alanı ne?",ask:"Kendine sor: Bu kişi tam olarak neyin uzmanı?",label:"Otorite yanılgısı"},
+    saman:{q:"Gerçekten benim argümanıma mı itiraz ediyorlar?",body:"Saman adamda karşı taraf senin söylediğini değil, söylemediğini çürütür. Daha kolay hedef seçer - fark etmeyelim diye hızlı konuşur.",ex:"Örnek: 'Çevre düzenlemesi isteyen herkes ekonomiyi bitirmek istiyor' - bu, gerçek argümanın karikatürüdür.",ask:"Kendine sor: Karşı taraf tam olarak ne dedi? Aynen tekrar edebilir miyim?",label:"Saman adam"},
+    yaniltici:{q:"Rakamlar neden bizi yanıltır?",body:"Sayılar nesnel görünür ama bağlam olmadan anlamsızdır. %90 başarı mı? Neye göre, kimde, ne zaman ölçüldü? Yüzdeler baz sayıyı gizler.",ex:"Örnek: 'Müşterilerin %80'i memnun' - peki kaç kişiye soruldu? Memnun olmayanlar anketi doldurdu mu?",ask:"Kendine sor: Bu verinin kaynağı kim ve ne kazanıyor?",label:"Yanıltıcı veri/istatistik"}
+  };
+  var activeCard=null;
+  function selectTrap(el,key){
+    var grid=document.getElementById('trapGrid'),box=document.getElementById('detail');
+    if(activeCard===el){el.classList.remove('active');box.classList.remove('on');activeCard=null;return;}
+    grid.querySelectorAll('.trap-card').forEach(function(c){c.classList.remove('active')});el.classList.add('active');activeCard=el;
+    var t=traps[key];
+    document.getElementById('dQ').textContent=t.q;document.getElementById('dB').textContent=t.body;document.getElementById('dE').textContent=t.ex;document.getElementById('dA').textContent=t.ask;
+    document.getElementById('dStart').onclick=function(){startTrainer(t.label+" tuzağı")};
+    box.classList.add('on');
+  }
+
+  // TRAINER
+  var history=[],focus='',isWaiting=false;
+  function sysPrompt(f){
+    return "Sen 'Düşünce Okuryazarlığı' eğitmenisin - eleştirel düşünmeyi ADAPTİF bir alıştırma yoluyla öğretiyorsun."+(f?(" Bu oturumun odağı: "+f+"."):"")+"\nNasıl ilerlersin: 1) Gerçek hayattan KISA bir senaryo/argüman/haber/istatistik ver ve tek bir SORU sor (ör. 'Burada hangi düşünce tuzağı var?' / 'Bu argümanın zayıf noktası ne?'). Başta kolay tut. 2) Kullanıcı yanıtlayınca cevabını ANALİZ et: neyi doğru gördü, neyi kaçırdı; nazikçe düzelt, 1-2 cümle öğret. 3) Bir sonraki soruyu kullanıcının zayıf noktasına göre uyarla (kaçırdığı tuzağa odaklan; iyi gidiyorsa zorlaştır). Tuzaklar: doğrulama önyargısı, otorite yanılgısı, saman adam, yanıltıcı veri, ikilem, kayganlık, duygusal manipülasyon, korelasyon-nedensellik. Türkçe, sıcak, yargılamayan, KISA. HER mesaj = kısa geri bildirim + TEK yeni soru. İLK MESAJ: 1 cümle hoş geldin + ilk (kolay) soru.";
+  }
+  function startTrainer(f){focus=f||'';history=[];document.getElementById('landing').style.display='none';document.getElementById('trainer').style.display='flex';document.getElementById('chat').innerHTML='';doCall('Başlayalım.',true);}
+  function backHome(){document.getElementById('trainer').style.display='none';document.getElementById('landing').style.display='block';}
+  async function callProxy(){
+    var msgs=[{role:'system',content:sysPrompt(focus)}].concat(history);
+    async function go(t){return fetch(PROXY,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({messages:msgs,temperature:0.8,sessionToken:t})});}
+    var st=await ensureSession();var r=await go(st);
+    if(r.status===401){_ses=null;localStorage.removeItem('cf_ses');st=await ensureSession();r=await go(st);}
+    var d=await r.json();if(d.error)throw new Error(d.error.message||JSON.stringify(d.error));
+    return (d.choices&&d.choices[0]&&d.choices[0].message.content||'').trim();
+  }
+  function sendMsg(){var i=document.getElementById('inp');var t=i.value.trim();if(!t||isWaiting)return;i.value='';i.style.height='';addBub('user',t);history.push({role:'user',content:t});doCall(null,false);}
+  async function doCall(first,isFirst){
+    isWaiting=true;document.getElementById('send').disabled=true;
+    if(isFirst)history.push({role:'user',content:first});
+    var tp=showTyping();
+    try{var r=await callProxy();tp.remove();if(r){addBub('ai',r);history.push({role:'assistant',content:r});}else addBub('ai','⚠️ Boş yanıt, tekrar dene.');}
+    catch(e){tp.remove();addBub('ai','⚠️ Hata: '+e.message);}
+    isWaiting=false;document.getElementById('send').disabled=false;document.getElementById('inp').focus();
+  }
+  function addBub(role,text){var c=document.getElementById('chat');var r=document.createElement('div');r.className='b-row '+role;var a=document.createElement('div');a.className='av '+role;a.textContent=role==='ai'?'🧠':'✦';var b=document.createElement('div');b.className='bub '+role;b.textContent=text;r.appendChild(a);r.appendChild(b);c.appendChild(r);c.scrollTop=c.scrollHeight;}
+  function showTyping(){var c=document.getElementById('chat');var r=document.createElement('div');r.className='b-row ai';var a=document.createElement('div');a.className='av ai';a.textContent='🧠';var b=document.createElement('div');b.className='bub ai';b.innerHTML='<div class="typing"><span></span><span></span><span></span></div>';r.appendChild(a);r.appendChild(b);c.appendChild(r);c.scrollTop=c.scrollHeight;return r;}
+  function hk(e){if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();sendMsg();}}
+  function ar(el){el.style.height='auto';el.style.height=Math.min(el.scrollHeight,120)+'px';}
+</script>
+<div id="ts-box" style="position:fixed;bottom:10px;left:10px;z-index:99"></div>
+<script src="https://challenges.cloudflare.com/turnstile/v0/api.js?render=explicit&onload=cfTsOnload" async defer></script>
+</body>
+</html>
