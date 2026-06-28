@@ -84,7 +84,7 @@
     <h1 class="title">Daha iyi <em>düşünmek</em><br>öğrenilebilir.</h1>
     <p class="subtitle">Mantık hataları, önyargılar, manipülasyon - bunları fark etmek bir yetenek değil, bir araç meselesi. Eksik araçları burada, yapay zekayla pratik yaparak edin.</p>
     <div class="cta-row">
-      <button class="btn-primary" onclick="startTrainer('')">Antrenmana başla ↗</button>
+      <button class="btn-primary" onclick="startTrainer('','quiz')">Antrenmana başla ↗</button>
       <button class="btn-ghost" onclick="document.querySelector('#traps').scrollIntoView({behavior:'smooth'})">Tuzakları keşfet</button>
     </div>
     <div class="stat-row">
@@ -165,16 +165,26 @@
     grid.querySelectorAll('.trap-card').forEach(function(c){c.classList.remove('active')});el.classList.add('active');activeCard=el;
     var t=traps[key];
     document.getElementById('dQ').textContent=t.q;document.getElementById('dB').textContent=t.body;document.getElementById('dE').textContent=t.ex;document.getElementById('dA').textContent=t.ask;
-    document.getElementById('dStart').onclick=function(){startTrainer(t.label+" tuzağı")};
+    document.getElementById('dStart').onclick=function(){startTrainer(t.label+" tuzağı",'quiz')};
     box.classList.add('on');
   }
 
   // TRAINER
   var history=[],focus='',isWaiting=false;
   function sysPrompt(f){
-    return "Sen 'Düşünce Okuryazarlığı' eğitmenisin - eleştirel düşünmeyi ADAPTİF bir alıştırma yoluyla öğretiyorsun."+(f?(" Bu oturumun odağı: "+f+"."):"")+"\nNasıl ilerlersin: 1) Gerçek hayattan KISA bir senaryo/argüman/haber/istatistik ver ve tek bir SORU sor (ör. 'Burada hangi düşünce tuzağı var?' / 'Bu argümanın zayıf noktası ne?'). Başta kolay tut. 2) Kullanıcı yanıtlayınca cevabını ANALİZ et: neyi doğru gördü, neyi kaçırdı; nazikçe düzelt, 1-2 cümle öğret. 3) Bir sonraki soruyu kullanıcının zayıf noktasına göre uyarla (kaçırdığı tuzağa odaklan; iyi gidiyorsa zorlaştır). Tuzaklar: doğrulama önyargısı, otorite yanılgısı, saman adam, yanıltıcı veri, ikilem, kayganlık, duygusal manipülasyon, korelasyon-nedensellik. Türkçe, sıcak, yargılamayan, KISA. HER mesaj = kısa geri bildirim + TEK yeni soru. İLK MESAJ: 1 cümle hoş geldin + ilk (kolay) soru.";
+    return "Sen 'Düşünce Okuryazarlığı' eğitmenisin - sıcak, net ve gerçek örnekler veren bir eleştirel düşünme öğretmeni."+(f?(" Şu anki konu: "+f+"."):"")
+    +"\nGörevin İKİ yönlü:\n• ÖĞRET: Konuyu açık, somut ve gerçek hayattan örneklerle anlat - gerektiğinde madde madde, doyurucu ve gerçekten faydalı. Yüzeysel geçme.\n• ALIŞTIR: Gerçek hayattan kısa bir senaryo/argüman/istatistik ver, bir soru sor; kullanıcı yanıtlayınca cevabını analiz et (neyi doğru gördü, neyi kaçırdı), nazikçe düzelt ve zorluğu uyarlayarak devam et.\nKullanıcı bir soru sorarsa doğrudan ve kaliteli cevap ver. Türkçe, sıcak, yargılamayan; net ve toparlı yaz. Mesaj sonunda çoğu zaman tek bir küçük soru ya da 'pratik yapalım mı?' daveti ile devam ettir.\nTuzak repertuarı: doğrulama önyargısı, otorite yanılgısı, saman adam, yanıltıcı veri, ikilem (false dilemma), kayganlık (slippery slope), duygusal manipülasyon, korelasyon-nedensellik karışımı.";
   }
-  function startTrainer(f){focus=f||'';history=[];document.getElementById('landing').style.display='none';document.getElementById('trainer').style.display='flex';document.getElementById('chat').innerHTML='';doCall('Başlayalım.',true);}
+  function startTrainer(f,mode){
+    focus=f||'';history=[];
+    document.getElementById('landing').style.display='none';
+    document.getElementById('trainer').style.display='flex';
+    document.getElementById('chat').innerHTML='';
+    var opener = mode==='quiz'
+      ? 'Beni eleştirel düşünme konusunda sına: gerçek hayattan kısa bir senaryoyla başla ve bana bir soru sor.'
+      : (f ? ('Bana şu konuyu öğret: "'+f+'". Önce açık ve örnekli anlat (gerçekten faydalı ol), sonunda istersem yapabileceğim küçük bir alıştırma öner.') : 'Eleştirel düşünmeye sıcak bir giriş yap ve nereden başlayabileceğimi söyle.');
+    doCall(opener,true);
+  }
   function backHome(){document.getElementById('trainer').style.display='none';document.getElementById('landing').style.display='block';}
   async function callProxy(){
     var msgs=[{role:'system',content:sysPrompt(focus)}].concat(history);
