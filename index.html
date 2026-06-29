@@ -138,19 +138,25 @@
   let _ses=null;try{_ses=JSON.parse(localStorage.getItem('cf_ses')||'null');}catch(e){}
   let _tsWid=null,_tsTok='',_tsW=null;
   function _tsShow(b){var e=document.getElementById('ts-box');if(e)e.style.display=b?'block':'none';}
-  window.cfTsOnload=function(){try{_tsWid=turnstile.render('#ts-box',{sitekey:SITEKEY,size:'compact',callback:function(t){_tsTok=t;if(_tsW){_tsW(t);_tsW=null;}if(_sesOk())_tsShow(false);},'error-callback':function(){if(_tsW){_tsW('');_tsW=null;}}});if(_sesOk())_tsShow(false);}catch(e){}};
-  function _tsToken(){return new Promise(function(res){if(typeof turnstile==='undefined'||_tsWid===null){res('');return;}if(_tsTok){var t=_tsTok;_tsTok='';res(t);return;}_tsShow(true);_tsW=res;try{turnstile.reset(_tsWid);}catch(e){}});}
   function _sesOk(){return _ses&&_ses.token&&_ses.exp&&Date.now()<_ses.exp-60000;}
+  window.cfTsOnload=function(){try{_tsWid=turnstile.render('#ts-box',{sitekey:SITEKEY,size:'compact',callback:function(t){_tsTok=t;if(_tsW){_tsW(t);_tsW=null;}_tsShow(false);},'error-callback':function(){if(_tsW){_tsW('');_tsW=null;}}});_tsShow(false);}catch(e){}};
+  function _tsToken(){return new Promise(function(res){
+    if(typeof turnstile==='undefined'||_tsWid===null){res('');return;}
+    if(_tsTok){var t=_tsTok;_tsTok='';res(t);return;}
+    _tsW=res;_tsShow(true);try{turnstile.reset(_tsWid);}catch(e){}
+    setTimeout(function(){if(_tsW===res){_tsW=null;res('');}},9000);
+  });}
   async function ensureSession(){
     if(_sesOk())return _ses.token;
     var tt=await _tsToken();
-    if(!tt)throw new Error('Bot doğrulaması yüklenemedi - sol alttaki kutuyu işaretle, tekrar dene.');
+    if(!tt)throw new Error('Doğrulama yüklenemedi. Sayfayı yenile; gerekirse sol alttaki kutuyu işaretle.');
     var r=await fetch(PROXY,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({action:'auth',turnstileToken:tt})});
     var d=await r.json();
     if(!d.sessionToken)throw new Error((d.error||'oturum alınamadı')+(d.codes&&d.codes.length?(' ['+d.codes.join(', ')+']'):''));
     _ses={token:d.sessionToken,exp:d.exp};try{localStorage.setItem('cf_ses',JSON.stringify(_ses));}catch(e){}
     _tsShow(false);return _ses.token;
   }
+  setTimeout(function(){if(!_sesOk()){ensureSession().catch(function(){});}},800);
 
   var traps={
     dogrulama:{q:"Neden sadece kendimizi haklı çıkaran bilgileri görürüz?",body:"Beyin enerji tasarrufu yapar. İnanılanı destekleyen bilgiyi işlemek, sorgulamaktan kolaydır. Bu yüzden aynı kaynağı okur, aynı insanlarla konuşuruz.",ex:"Örnek: Bir ürünü almadan önce aklımız çoktan karar vermiştir - sonra yalnızca o kararı destekleyen yorumları okuruz.",ask:"Kendine sor: Son ne zaman görüşünü değiştirdin ve neden?",label:"Doğrulama önyargısı"},
@@ -196,12 +202,16 @@
   }
   function sendMsg(){var i=document.getElementById('inp');var t=i.value.trim();if(!t||isWaiting)return;i.value='';i.style.height='';addBub('user',t);history.push({role:'user',content:t});doCall(null,false);}
   async function doCall(first,isFirst){
+    if(isWaiting)return;
     isWaiting=true;document.getElementById('send').disabled=true;
     if(isFirst)history.push({role:'user',content:first});
     var tp=showTyping();
-    try{var r=await callProxy();tp.remove();if(r){addBub('ai',r);history.push({role:'assistant',content:r});}else addBub('ai','⚠️ Boş yanıt, tekrar dene.');}
-    catch(e){tp.remove();addBub('ai','⚠️ Hata: '+e.message);}
-    isWaiting=false;document.getElementById('send').disabled=false;document.getElementById('inp').focus();
+    try{
+      var r=await Promise.race([callProxy(),new Promise(function(_,rej){setTimeout(function(){rej(new Error('Zaman aşımı - tekrar dener misin?'))},20000)})]);
+      if(tp)tp.remove();
+      if(r){addBub('ai',r);history.push({role:'assistant',content:r});}else addBub('ai','⚠️ Boş yanıt, tekrar dene.');
+    }catch(e){if(tp)tp.remove();addBub('ai','⚠️ '+(e&&e.message?e.message:e));}
+    finally{isWaiting=false;document.getElementById('send').disabled=false;document.getElementById('inp').focus();}
   }
   function addBub(role,text){var c=document.getElementById('chat');var r=document.createElement('div');r.className='b-row '+role;var a=document.createElement('div');a.className='av '+role;a.textContent=role==='ai'?'🧠':'✦';var b=document.createElement('div');b.className='bub '+role;b.textContent=text;r.appendChild(a);r.appendChild(b);c.appendChild(r);c.scrollTop=c.scrollHeight;}
   function showTyping(){var c=document.getElementById('chat');var r=document.createElement('div');r.className='b-row ai';var a=document.createElement('div');a.className='av ai';a.textContent='🧠';var b=document.createElement('div');b.className='bub ai';b.innerHTML='<div class="typing"><span></span><span></span><span></span></div>';r.appendChild(a);r.appendChild(b);c.appendChild(r);c.scrollTop=c.scrollHeight;return r;}
