@@ -94,6 +94,11 @@
     </div>
   </div>
 
+  <div class="section" id="recent" style="display:none">
+    <div class="section-label">Kaldığın yerden devam et</div>
+    <div class="lesson-row" id="recentList"></div>
+  </div>
+
   <div class="section" id="traps">
     <div class="section-label">Sık düşülen tuzaklar</div>
     <div class="trap-grid" id="trapGrid">
@@ -124,7 +129,7 @@
 </div>
 
 <div id="trainer">
-  <div class="t-head"><span class="ttl">🧠 Düşünce Antrenörü</span><button class="t-back" onclick="backHome()">← Geri</button></div>
+  <div class="t-head"><span class="ttl" id="tTitle">🧠 Düşünce Antrenörü</span><button class="t-back" onclick="backHome()">← Geri</button></div>
   <div id="chat"></div>
   <div id="ibar"><div class="irow">
     <textarea id="inp" placeholder="Cevabını yaz..." rows="1" onkeydown="hk(event)" oninput="ar(this)"></textarea>
@@ -176,22 +181,51 @@
   }
 
   // TRAINER
-  var convo=[],focus='',isWaiting=false;
+  var convo=[],focus='',isWaiting=false,curKey=null,curMode='',_recentKeys=[];
+  function _esc(s){return String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
+  function loadThreads(){try{return JSON.parse(localStorage.getItem('do_threads')||'{}')}catch(e){return {}}}
+  function saveThreads(o){try{localStorage.setItem('do_threads',JSON.stringify(o))}catch(e){}}
+  function tKey(f,m){return (m||'teach')+'|'+(f||'');}
+  function tTitle(f){return f?String(f).split(':')[0].trim():'Genel antrenman';}
+  function saveCurrent(){
+    if(!curKey||!convo.some(function(m){return m.role==='assistant'}))return;
+    var o=loadThreads();o[curKey]={focus:focus,mode:curMode,title:tTitle(focus),convo:convo,updated:Date.now()};saveThreads(o);renderRecent();
+  }
+  function renderRecent(){
+    var o=loadThreads();var keys=Object.keys(o).sort(function(a,b){return (o[b].updated||0)-(o[a].updated||0);});_recentKeys=keys;
+    var wrap=document.getElementById('recent'),list=document.getElementById('recentList');if(!wrap||!list)return;
+    if(!keys.length){wrap.style.display='none';return;}
+    wrap.style.display='block';
+    list.innerHTML=keys.map(function(k,idx){var t=o[k];var la=(t.convo||[]).filter(function(m){return m.role==='assistant'}).slice(-1)[0];var sn=la?la.content.slice(0,68):'';
+      return '<div class="lesson" onclick="resumeThread('+idx+')"><div class="lesson-num">↻</div><div class="lesson-c"><div class="lesson-t">'+_esc(t.title||'Sohbet')+'</div><div class="lesson-s">'+_esc(sn)+(sn.length>=68?'…':'')+'</div></div><span class="tag tag-zor" onclick="event.stopPropagation();delThread('+idx+')">sil</span></div>';
+    }).join('');
+  }
+  function resumeThread(i){var k=_recentKeys[i];var t=k&&loadThreads()[k];if(t)startTrainer(t.focus,t.mode);}
+  function delThread(i){var k=_recentKeys[i];if(!k)return;var o=loadThreads();delete o[k];saveThreads(o);renderRecent();}
+  renderRecent();
   function sysPrompt(f){
     return "Sen 'Düşünce Okuryazarlığı' eğitmenisin - sıcak, net ve gerçek örnekler veren bir eleştirel düşünme öğretmeni."+(f?(" Şu anki konu: "+f+"."):"")
     +"\nGörevin İKİ yönlü:\n• ÖĞRET: Konuyu açık, somut ve gerçek hayattan örneklerle anlat - gerektiğinde madde madde, doyurucu ve gerçekten faydalı. Yüzeysel geçme.\n• ALIŞTIR: Gerçek hayattan kısa bir senaryo/argüman/istatistik ver, bir soru sor; kullanıcı yanıtlayınca cevabını analiz et (neyi doğru gördü, neyi kaçırdı), nazikçe düzelt ve zorluğu uyarlayarak devam et.\nKullanıcı bir soru sorarsa doğrudan ve kaliteli cevap ver. Türkçe, sıcak, yargılamayan; net ve toparlı yaz. Mesaj sonunda çoğu zaman tek bir küçük soru ya da 'pratik yapalım mı?' daveti ile devam ettir.\nTuzak repertuarı: doğrulama önyargısı, otorite yanılgısı, saman adam, yanıltıcı veri, ikilem (false dilemma), kayganlık (slippery slope), duygusal manipülasyon, korelasyon-nedensellik karışımı.";
   }
   function startTrainer(f,mode){
-    focus=f||'';convo=[];
+    focus=f||'';curMode=mode||'';curKey=tKey(focus,curMode);
     document.getElementById('landing').style.display='none';
     document.getElementById('trainer').style.display='flex';
     document.getElementById('chat').innerHTML='';
+    var tt=document.getElementById('tTitle');if(tt)tt.textContent='🧠 '+tTitle(focus);
+    var saved=loadThreads()[curKey];
+    if(saved&&saved.convo&&saved.convo.some(function(m){return m.role==='assistant'})){
+      convo=saved.convo;
+      convo.forEach(function(m,i){if(i===0&&m.role==='user')return;addBub(m.role==='assistant'?'ai':'user',m.content);});
+      return;
+    }
+    convo=[];
     var opener = mode==='quiz'
       ? 'Beni eleştirel düşünme konusunda sına: gerçek hayattan kısa bir senaryoyla başla ve bana bir soru sor.'
       : (f ? ('Bana şu konuyu öğret: "'+f+'". Önce açık ve örnekli anlat (gerçekten faydalı ol), sonunda istersem yapabileceğim küçük bir alıştırma öner.') : 'Eleştirel düşünmeye sıcak bir giriş yap ve nereden başlayabileceğimi söyle.');
     doCall(opener,true);
   }
-  function backHome(){document.getElementById('trainer').style.display='none';document.getElementById('landing').style.display='block';}
+  function backHome(){document.getElementById('trainer').style.display='none';document.getElementById('landing').style.display='block';renderRecent();}
   async function callProxy(){
     var msgs=[{role:'system',content:sysPrompt(focus)}].concat(convo);
     async function go(t){return fetch(PROXY,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({messages:msgs,temperature:0.8,sessionToken:t})});}
@@ -211,7 +245,7 @@
       if(tp)tp.remove();
       if(r){addBub('ai',r);convo.push({role:'assistant',content:r});}else addBub('ai','⚠️ Boş yanıt, tekrar dene.');
     }catch(e){if(tp)tp.remove();addBub('ai','⚠️ '+(e&&e.message?e.message:e));}
-    finally{isWaiting=false;document.getElementById('send').disabled=false;document.getElementById('inp').focus();}
+    finally{isWaiting=false;document.getElementById('send').disabled=false;document.getElementById('inp').focus();saveCurrent();}
   }
   function addBub(role,text){var c=document.getElementById('chat');var r=document.createElement('div');r.className='b-row '+role;var a=document.createElement('div');a.className='av '+role;a.textContent=role==='ai'?'🧠':'✦';var b=document.createElement('div');b.className='bub '+role;b.textContent=text;r.appendChild(a);r.appendChild(b);c.appendChild(r);c.scrollTop=c.scrollHeight;}
   function showTyping(){var c=document.getElementById('chat');var r=document.createElement('div');r.className='b-row ai';var a=document.createElement('div');a.className='av ai';a.textContent='🧠';var b=document.createElement('div');b.className='bub ai';b.innerHTML='<div class="typing"><span></span><span></span><span></span></div>';r.appendChild(a);r.appendChild(b);c.appendChild(r);c.scrollTop=c.scrollHeight;return r;}
