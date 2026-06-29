@@ -176,13 +176,13 @@
   }
 
   // TRAINER
-  var history=[],focus='',isWaiting=false;
+  var convo=[],focus='',isWaiting=false;
   function sysPrompt(f){
     return "Sen 'Düşünce Okuryazarlığı' eğitmenisin - sıcak, net ve gerçek örnekler veren bir eleştirel düşünme öğretmeni."+(f?(" Şu anki konu: "+f+"."):"")
     +"\nGörevin İKİ yönlü:\n• ÖĞRET: Konuyu açık, somut ve gerçek hayattan örneklerle anlat - gerektiğinde madde madde, doyurucu ve gerçekten faydalı. Yüzeysel geçme.\n• ALIŞTIR: Gerçek hayattan kısa bir senaryo/argüman/istatistik ver, bir soru sor; kullanıcı yanıtlayınca cevabını analiz et (neyi doğru gördü, neyi kaçırdı), nazikçe düzelt ve zorluğu uyarlayarak devam et.\nKullanıcı bir soru sorarsa doğrudan ve kaliteli cevap ver. Türkçe, sıcak, yargılamayan; net ve toparlı yaz. Mesaj sonunda çoğu zaman tek bir küçük soru ya da 'pratik yapalım mı?' daveti ile devam ettir.\nTuzak repertuarı: doğrulama önyargısı, otorite yanılgısı, saman adam, yanıltıcı veri, ikilem (false dilemma), kayganlık (slippery slope), duygusal manipülasyon, korelasyon-nedensellik karışımı.";
   }
   function startTrainer(f,mode){
-    focus=f||'';history=[];
+    focus=f||'';convo=[];
     document.getElementById('landing').style.display='none';
     document.getElementById('trainer').style.display='flex';
     document.getElementById('chat').innerHTML='';
@@ -193,23 +193,23 @@
   }
   function backHome(){document.getElementById('trainer').style.display='none';document.getElementById('landing').style.display='block';}
   async function callProxy(){
-    var msgs=[{role:'system',content:sysPrompt(focus)}].concat(history);
+    var msgs=[{role:'system',content:sysPrompt(focus)}].concat(convo);
     async function go(t){return fetch(PROXY,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({messages:msgs,temperature:0.8,sessionToken:t})});}
     var st=await ensureSession();var r=await go(st);
     if(r.status===401){_ses=null;localStorage.removeItem('cf_ses');st=await ensureSession();r=await go(st);}
     var d=await r.json();if(d.error)throw new Error(d.error.message||JSON.stringify(d.error));
     return (d.choices&&d.choices[0]&&d.choices[0].message.content||'').trim();
   }
-  function sendMsg(){var i=document.getElementById('inp');var t=i.value.trim();if(!t||isWaiting)return;i.value='';i.style.height='';addBub('user',t);history.push({role:'user',content:t});doCall(null,false);}
+  function sendMsg(){var i=document.getElementById('inp');var t=i.value.trim();if(!t||isWaiting)return;i.value='';i.style.height='';addBub('user',t);convo.push({role:'user',content:t});doCall(null,false);}
   async function doCall(first,isFirst){
     if(isWaiting)return;
     isWaiting=true;document.getElementById('send').disabled=true;
-    if(isFirst)history.push({role:'user',content:first});
+    if(isFirst)convo.push({role:'user',content:first});
     var tp=showTyping();
     try{
       var r=await Promise.race([callProxy(),new Promise(function(_,rej){setTimeout(function(){rej(new Error('Zaman aşımı - tekrar dener misin?'))},20000)})]);
       if(tp)tp.remove();
-      if(r){addBub('ai',r);history.push({role:'assistant',content:r});}else addBub('ai','⚠️ Boş yanıt, tekrar dene.');
+      if(r){addBub('ai',r);convo.push({role:'assistant',content:r});}else addBub('ai','⚠️ Boş yanıt, tekrar dene.');
     }catch(e){if(tp)tp.remove();addBub('ai','⚠️ '+(e&&e.message?e.message:e));}
     finally{isWaiting=false;document.getElementById('send').disabled=false;document.getElementById('inp').focus();}
   }
